@@ -5,14 +5,10 @@
 ##### To describe the rotation of an object we need three things: Yaw, Pitch and Roll.
 
 
-##### As shown by the data analysis, roll is 0 always. This makes sense as there aren't any cars dumped (in this dataset), so we can suppose roll always 0
-
-.
+##### As shown by the data analysis, roll is 0 always. This makes sense as there aren't any cars dumped (in this dataset), so we can suppose roll always 0.
 
 With respect to Pitch (elevation of the nose of the car), the distribution of this datasets shows a gaussian with μ≈0.1
-and a low σ. The intuition tells us that because of a car is parallel to the ground, this should be 0. The deviation of this dataset seems to be due to the annotation/generation failures. Notwithstanding, we can suppose that Pitch will be always μ=0.15
-
-.
+and a low σ. The intuition tells us that because of a car is parallel to the ground, this should be 0. The deviation of this dataset seems to be due to the annotation/generation failures. Notwithstanding, we can suppose that Pitch will be always μ=0.15.
 
 So, only Yaw is unknown. This will be our regression target.
 
