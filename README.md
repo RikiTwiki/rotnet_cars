@@ -30,6 +30,8 @@ There is a paper [https://arxiv.org/pdf/1612.00496.pdf](https://arxiv.org/pdf/16
 For fixing the problem of wrapping, we first have to convert the rotation to "global angle", that is +π=180,−π=180
 (the negative angles are 360−a^). Once done that, we divide the space in N bins shifted a little bit (as shown in the image) so that we can exploit the advantage that most of the cars have 0 and 180 degrees.
 
+![example](/test_images/r5VjQxS.jpg)
+
 
 
 Here's an example of a definition:
