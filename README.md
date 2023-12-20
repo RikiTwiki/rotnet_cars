@@ -35,3 +35,5 @@ For fixing the problem of wrapping, we first have to convert the rotation to "gl
 
 
 Here's an example of a definition:
+
+![test_images](/test_images/Снимок экрана от 2023-12-20 18-19-36.png)
