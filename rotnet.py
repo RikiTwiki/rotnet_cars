@@ -17,6 +17,11 @@ import seaborn as sns
 import cv2
 from PIL import Image
 
+from tensorflow.keras.models import load_model
+from tensorflow.keras.preprocessing import image
+
+
+
 CAMERA_fx = 2304.5479
 CAMERA_fy = 2305.8757
 CAMERA_cx = 1686.2379
@@ -134,20 +139,6 @@ new_dataset_rows.extend([others] * 10)
 
 dataset = pd.concat(new_dataset_rows).sample(frac=1)
 
-# A crop example
-Image.open(dataset.iloc[115,0])
-
-fig, ax = plt.subplots(3, figsize=(12,7))
-
-sns.distplot(dataset['Ray_Angle_angle'], ax=ax[0], bins=360)
-ax[0].set_title("Ray_Angle_angle")
-
-sns.distplot(dataset['Bin_nb'], ax=ax[1], kde=False)
-ax[1].set_title("Bin_nb")
-
-sns.distplot(dataset['Bin_offset_norm'], ax=ax[2])
-ax[2].set_title("Bin_offset_norm")
-
 # Train / Validation / Test split
 train_mask = np.random.rand(len(dataset)) < 0.8
 
@@ -236,25 +227,7 @@ metrics = {
 model.compile(optimizers.Adam(lr=1e-4), loss=['categorical_crossentropy', 'mse'], loss_weights=[0.5, 0.5], 
               metrics=metrics)
 
-hist = model.fit(dataset,
-                 epochs = 20,
-                 callbacks = callbacks,
-                 steps_per_epoch=steps_per_epoch_train, 
-                 validation_data=dataset_valid, 
-                 validation_steps=validation_steps)
-
-fig, ax = plt.subplots(2, figsize=(8,5))
-ax[0].plot(hist.history['val_out_bin_acc'], label='val_acc')
-ax[0].plot(hist.history['out_bin_acc'], label='train_acc')
-ax[0].grid(True)
-ax[0].legend()
-
-ax[1].plot(hist.history['val_out_offset_loss'], label='val_offset')
-ax[1].plot(hist.history['out_offset_loss'], label='train_offset')
-ax[1].grid(True)
-ax[1].legend()
-
-fig.suptitle("Train history")
+model = load_model('yaw.h5')
 
 test_results = model.predict(data_test, steps=steps_per_epoch_test, verbose=True)
 
@@ -262,7 +235,8 @@ test_results = model.predict(data_test, steps=steps_per_epoch_test, verbose=True
 test_results[1] *= max_off
 
 index = 29
-image = Image.open(df_test.iloc[index]['Name'])
+# image = Image.open(df_test.iloc[index]['Name'])
+image = Image.open('/home/sanarip03/Desktop/archive(5)/rotation-dataset/img/0c6d44e8-255c-11ea-8487-d33bb75a032d.jpeg')
 p_off = test_results[1][index]
 p_bin = test_results[0][index]
 
@@ -282,60 +256,3 @@ ray_angle = df_test.iloc[index]['Ray_Angle']
 print(f"Predicted bin: {bin_nb}")
 print(f"Predicted offset: {offset}")
 print(f"PREDICTED ANGLE {math.degrees(prediction_to_yaw(bin_nb, offset, ray_angle)[0])}")
-
-display(image)
-
-pred_angles = []
-real_angles = []
-
-real_bins = []
-predicted_bins = []
-
-for i in range(len(test_results[1])):
-    p_off = test_results[1][i]
-    p_bin = test_results[0][i]
-    ray_angle = df_test.iloc[i]['Ray_Angle']
-    
-    bin_nb = np.argmax(p_bin)
-    offset = p_off
-    
-    ang = math.degrees(prediction_to_yaw(bin_nb, offset, ray_angle)[0])
-    
-    pred_angles.append(ang)
-    real_angles.append(math.degrees(df_test.iloc[i]['Global_angle']))
-    
-    real_bins.append(df_test.iloc[i]['Bin_nb'])
-    predicted_bins.append(bin_nb)
-
-cm = confusion_matrix(real_bins, predicted_bins)
-df_cm = pd.DataFrame(cm)
-df_cm.index.name = 'Actual'
-df_cm.columns.name = 'Predicted'
-
-fig, ax = plt.subplots(figsize=(8, 8))
-ax.set_title('Confusion Matrix')
-sns.heatmap(cm, cmap="Blues", annot=True, ax=ax, annot_kws={"size": 9})
-ax.set_ylabel('Actual bin')
-ax.set_xlabel('Predicted bin');
-
-
-
-fig, ax = plt.subplots(1)
-ax.scatter(real_angles, pred_angles, alpha=0.5, s=2);
-
-
-
-errors = [angle_distance(a1, a2) for a1,a2 in zip(pred_angles, real_angles)]
-
-fig, ax = plt.subplots(1, figsize=(11,8))
-sns.distplot(errors, ax=ax)
-ax.set_title("Error distribution")
-ax.set_xlabel("Degrees")
-
-print(f"Avg. error: {np.mean(np.abs(errors))}")
-print(f"Median error: {np.median(errors)}")
-print(f"Max. error: {np.max(np.abs(errors))}")
-print(f"SD error: {np.std(errors)}")
-
-# Save model if needed
-model.save('yaw.h5')
